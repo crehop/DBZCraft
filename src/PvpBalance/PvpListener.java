@@ -44,22 +44,6 @@ public class PvpListener implements Listener
 		{
 			dp.setDefencePotionTimer(time);
 		}
-		/*is = p.getItemInHand();
-		if(is.getAmount() > 1)
-		{
-			//p.setItemInHand(null);
-			ItemStack clone = is.clone();
-			clone.setAmount(1);
-			for(int i=0;i<is.getAmount()-1;++i)
-			{
-				if(!isFull(p.getInventory()))
-					p.getInventory().addItem(clone);
-				else
-					p.getWorld().dropItemNaturally(p.getLocation(), clone);
-			}
-			p.setItemInHand(null);
-			p.updateInventory();
-		}*/
 	}
 	
 	@SuppressWarnings("deprecation")

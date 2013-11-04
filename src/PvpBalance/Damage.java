@@ -1,5 +1,6 @@
 package PvpBalance;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Arrow;
@@ -21,7 +22,7 @@ public class Damage
 	public static SaveLoad.LoadSave LoadSave;
 
 	//ADDED++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-	public static int calcDamage(Player player)
+	public static int calcDamage(Player player, Player damagee)
 	{
 		//Random rand = new Random();
 		int damage = 25;
@@ -52,7 +53,14 @@ public class Damage
 		}
 		damage += player.getItemInHand().getEnchantmentLevel(Enchantment.DAMAGE_ALL) * SaveLoad.LoadSave.Sharpness;
 		if(player.getActivePotionEffects().toString().contains("WEAK")){
-			damage = (damage/4) * 3;
+			damage = (damage/2);
+		}
+		//DBZ DAMAGE TABLES
+		if(player.getItemInHand().getType() == Material.SLIME_BALL){
+			Skills.SuperHit.superHit(player, damagee);
+		}
+		if(player.getItemInHand().getType() == Material.FIREBALL){
+			Skills.Tackle.tackle(player);
 		}
 		return damage;
 		
@@ -62,7 +70,7 @@ public class Damage
 	public static int calcArmor(Player player)
 	{
 		PVPPlayer pvpPlayer = PvpHandler.getPvpPlayer(player);
-		int armor = 500;
+		int armor = 15000;
 		for(ItemStack i:player.getInventory().getArmorContents())
 		{
 			int check = 0;

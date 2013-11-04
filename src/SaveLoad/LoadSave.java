@@ -16,7 +16,7 @@ public class LoadSave
 	public static int Chelmet = 0, Cchest = 0, Cleggings = 0, Cboots = 0;
 	public static int Lhelmet = 0, Lchest = 0, Lleggings = 0, Lboots = 0;
 	public static int Ehelmet = 0, Echest = 0, Eleggings = 0, Eboots = 0;
-	public static int protect = 0, HealPot = 0;
+	public static int protect = 0, HealPot = 0, Regen = 0;
 	
 	//Damage
 	
@@ -44,6 +44,7 @@ public class LoadSave
 		Explosion_Mob = plugin.getSDamage().getCustomConfig().getInt("Mobs.ExplosionMob");
 		
 		HealPot = plugin.getSDamage().getCustomConfig().getInt("Natural.HealPot");
+		Regen = plugin.getSDamage().getCustomConfig().getInt("Natural.Regen");
 		Firetick = plugin.getSDamage().getCustomConfig().getInt("Natural.FireTick");
 		Voide = plugin.getSDamage().getCustomConfig().getInt("Natural.Void");
 		Contact = plugin.getSDamage().getCustomConfig().getInt("Natural.Contact");
@@ -116,6 +117,8 @@ public class LoadSave
 		
 		HealPot = plugin.getSDamage().getCustomConfig().getInt("Natural.HealPot");
 		player.sendMessage(ChatColor.DARK_GREEN + "Health Potion Heal: " + ChatColor.GREEN + LoadSave.HealPot);
+		Regen = plugin.getSDamage().getCustomConfig().getInt("Natural.Regen");
+		player.sendMessage(ChatColor.DARK_GREEN + "Health Potion Heal: " + ChatColor.GREEN + LoadSave.Regen);
 		Firetick = plugin.getSDamage().getCustomConfig().getInt("Natural.FireTick");
 		player.sendMessage(ChatColor.DARK_GREEN + "Fire Tick: " + ChatColor.RED + LoadSave.Firetick);
 		Voide = plugin.getSDamage().getCustomConfig().getInt("Natural.Void");

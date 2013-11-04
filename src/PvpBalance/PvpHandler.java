@@ -6,11 +6,16 @@ import java.util.List;
 
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Fireball;
 import org.bukkit.entity.Player;
+
+import Skills.Kamehameha;
 
 public class PvpHandler
 {
 	private static List<PVPPlayer> players = new ArrayList<PVPPlayer>();
+	public static List<Kamehameha> kameya = new ArrayList<Kamehameha>();
+
 	private static int pvpTimer;
 	private static int defencePotionCD;
 	private static int offencePotionCD;
@@ -21,17 +26,45 @@ public class PvpHandler
 		{
 			if(pp == null)
 				continue;
-			if(pp.getPlayer().equals(player))
+			if(pp.getPlayer() == player)
 				return pp;
 		}
 		return null;
 	}
-	
-	public static boolean addPvpPlayer(PVPPlayer pp)
+	public static Kamehameha getKamehameha(Player shooter)
 	{
-		return players.add(pp);
+		for(Kamehameha fire:PvpHandler.kameya)
+		{
+			if(fire.getShooter().getName() == shooter.getName())
+			{
+				return fire;
+			}
+		}
+		return null;
+	}
+	public static boolean isInList(PVPPlayer pp)
+	{
+		for(PVPPlayer pp1 : players)
+		{
+			if(pp1 == null)
+			{
+				continue;
+			}
+			if(pp1.getPlayer().getDisplayName() == pp.getPlayer().getDisplayName())
+			{
+				return true;
+			}
+		}
+		return false;
 	}
 	
+	public static void addPvpPlayer(PVPPlayer pp)
+	{
+		if(isInList(pp) == false){
+			players.add(pp);
+		}
+		
+	}
 	public static boolean removePvpPlayer(PVPPlayer pp)
 	{
 		return players.remove(pp);

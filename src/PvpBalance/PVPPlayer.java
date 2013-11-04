@@ -1,39 +1,69 @@
 package PvpBalance;
 
 import java.util.Date;
+import java.util.Random;
 
 import me.frodenkvist.scoreboardmanager.SMHandler;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.block.Block;
+import org.bukkit.entity.Arrow;
+import org.bukkit.entity.FallingBlock;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.TNTPrimed;
 import org.bukkit.event.entity.EntityRegainHealthEvent.RegainReason;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
+import org.bukkit.util.Vector;
 
 import Event.PBEntityRegainHealthEvent;
 import Party.Invite;
 import Party.Party;
+import Skills.SuperSpeed;
+import Util.Utils;
 
 
 public class PVPPlayer
 {
 	private Player player;
 	private double health;
+	private double stamina;
 	private double healthLastTick;
 	private double maxHealth;
+	private double maxStamina;
 	private double cooldown;
+	private double healthPercent;
+	private Arrow grappleArrow;
+	private Location grappleStart;
+	private Location grappleEnd;
+	private Player hitByGrapple;
+	private int comboReady;
 	private int hitCoolDown;
+	private int skillCoolDown;
 	private int combatCoolDown;
 	private int hunger;
+	private int stun;
 	private int lastDamage;
 	private int armorEventLastTick;
+	private int wasSprinting;
+	private int tackleTimer;
+	private int superHitTimer;
+	private boolean wasSuperHit;
+	private boolean canUseGrappleShot;
+	private boolean isUsingGrappleShot;
+	private boolean canUsePileDrive;
 	private boolean inCombat;
 	private boolean isDead;
 	private boolean canRegen;
 	private boolean god;
 	private boolean pvpstats;
 	private boolean colorUp;
-	//private final double INVULNERABILITY_TIMER = 1D;
+	private boolean canUseSkill; 
+	private boolean firstToggle;
 	private long defencePotionTimer = 0L;
 	private long offencePotionTimer = 0L;
 	private long pvpTimer = 0L;
@@ -42,14 +72,30 @@ public class PVPPlayer
 	private Invite invite;
 	private Party ghostParty;
 	private boolean partyChat;
+	private boolean isStunned;
+	private boolean usedSpeedSkill;
+	private boolean superMode;
+	private int kamehaCooldown;
+	private boolean canKameha;
+	private int isDoubleJumping = 0;
+	private boolean canIntercept;
+	private int interceptCooldown;
+	private boolean canSuperhit;
+	private int superhitCooldown;
+	private int superRegenCountdown;
 	
 	public PVPPlayer(Player player)
 	{
+		this.superMode = false;
 		this.player = player;
-		this.health = 500;
+		this.health = 15000;
 		this.canRegen = true;
-		this.healthLastTick = 500;
-		this.maxHealth = 500;
+		this.skillCoolDown = 0;
+		this.kamehaCooldown = 0;
+		this.healthLastTick = 15000;
+		this.maxHealth = 15000;
+		this.maxStamina = 5000;
+		this.stamina = 5000;
 		this.cooldown = 0;
 		this.isDead = false;
 		this.hitCoolDown = 0;
@@ -58,9 +104,203 @@ public class PVPPlayer
 		this.combatCoolDown = 0;
 		this.armorEventLastTick = 0;
 		this.lastDamage = 0;
+		this.wasSprinting = 0;
+		this.usedSpeedSkill = false;
+		this.isStunned = false;
+		this.healthPercent = 100.0;
+		this.comboReady = 0;
+		this.canIntercept = true;
+		this.interceptCooldown = 0;
 		colorUp = false;
+		this.canSuperhit = true;
+		this.superHitTimer = 0;
+		this.canSuperhit = true;
+		this.superRegenCountdown = 10;
 	}
-
+	public void setWasSuperHit(boolean wasSuperHit)
+	{
+		this.wasSuperHit = wasSuperHit;
+		this.superHitTimer = 6;
+		if(wasSuperHit == false){
+			this.superHitTimer = 0;
+		}
+	}
+	public int getKamehaCooldown()
+	{
+		return this.kamehaCooldown;
+	}
+	public int tackleTimer()
+	{
+		return this.tackleTimer;
+	}
+	public void setTackleTimer(int tackleTimer)
+	{
+		if(tackleTimer < 0)
+		{
+			this.tackleTimer = 0;
+		}
+		else
+		{
+			this.tackleTimer = tackleTimer;
+		}
+	}
+	public void setIsDoubleJumping(int isDoubleJumping)
+	{
+		this.isDoubleJumping = isDoubleJumping;
+	}
+	public int getIsDoubleJumping()
+	{
+		return this.isDoubleJumping;
+	}
+	public boolean isUsingGrappleShot()
+	{
+		return this.isUsingGrappleShot;
+	}
+	public void setIsUsingGrappleShot(boolean isUsingGrappleShot)
+	{
+		this.isUsingGrappleShot = isUsingGrappleShot;
+	}
+	public Player getPlayerHitByGrapple()
+	{
+		return this.hitByGrapple;
+	}
+	public void setGrapplePlayer(Player player)
+	{
+		this.hitByGrapple = player;
+	}
+	public Arrow getGrappleArrow()
+	{
+		return this.grappleArrow;
+	}
+	public void setGrappleArrow(Arrow grappleArrow)
+	{
+		this.grappleArrow = grappleArrow;
+	}
+	public void setCanUseGrappleShot(boolean canUseGrappleShot)
+	{
+		this.canUseGrappleShot = canUseGrappleShot;
+	}
+	public boolean canUseGrappleShot()
+	{
+		return this.canUseGrappleShot;
+	}
+	public Location getGrappleStart()
+	{
+		return this.grappleStart;
+	}
+	public Location getGrappleEnd()
+	{
+		return this.grappleEnd;
+	}
+	public void setGrappleStart(Location grappleStart)
+	{
+		this.grappleStart = grappleStart;
+	}
+	public void setGrappleEnd(Location grappleEnd)
+	{
+		this.grappleEnd = grappleEnd;
+	}
+	public int getComboReady()
+	{
+		return this.comboReady;
+	}
+	public void setComboReady(int comboReady)
+	{
+		int modifiedComboReady = comboReady;
+		if(modifiedComboReady < 0){
+			modifiedComboReady = 0;
+		}
+		this.comboReady = modifiedComboReady;
+	}
+	public double getHealthPercent()
+	{
+		return this.healthPercent;
+	}
+	public void setHealthPercent(double percent)
+	{
+		this.health = this.health / percent;
+		this.healthPercent = percent;
+	}
+	public boolean getUsedSpeedSkill()
+	{
+		return this.usedSpeedSkill;
+	}
+	public void setUsedSpeedSkill(boolean usedSpeedSkill)
+	{
+		this.usedSpeedSkill = usedSpeedSkill;
+	}
+	public boolean wasFirstToggle()
+	{
+		return this.firstToggle;
+	}
+	public void setFirstToggle(boolean firstToggle)
+	{
+		this.firstToggle = firstToggle;
+	}
+	public int getWasSprinting()
+	{
+		return this.wasSprinting;
+	}
+	public void setWasSprinting(int wasSprinting)
+	{
+		this.wasSprinting = wasSprinting;
+	}
+	public int getStun()
+	{
+		return this.stun;
+	}
+	public void setStun(int stun)
+	{
+		this.stun = stun;
+	}
+	public boolean isStunned()
+	{
+		return this.isStunned;
+	}
+	public void setIsStunned(boolean isStunned)
+	{
+		this.isStunned = isStunned;
+	}
+	public double getStamina()
+	{
+		return this.stamina;
+	}
+	public double getMaxStamina()
+	{
+		return this.maxStamina;
+	}
+	public void setStamina(int stamina)
+	{
+		if(stamina < 0)
+		{
+			this.stamina = 0;
+		}
+		else if(this.getMaxStamina() < stamina)
+		{
+			this.stamina = this.getMaxStamina();
+		}
+		else
+		{
+			this.stamina = stamina;
+		}
+		
+	}
+	public void setMaxStamina(int maxStamina)
+	{
+		this.maxStamina = maxStamina;
+	}
+	public boolean canUseSkill()
+	{
+		return this.canUseSkill;
+	}
+	public int getSkillCooldown()
+	{
+		return this.skillCoolDown;
+	}
+	public void setSkillCooldown(int skillCoolDown)
+	{
+		this.skillCoolDown = skillCoolDown;
+	}
 	public Player getPlayer()
 	{
 		return this.player;
@@ -158,7 +398,10 @@ public class PVPPlayer
 		}
 		
 	}
-	
+	public void setCanUseSkill(boolean canUseSkill)
+	{
+		this.canUseSkill = canUseSkill;
+	}
 	public void setHitCoolDown(int hitCoolDown)
 	{
 		this.hitCoolDown = hitCoolDown;
@@ -181,15 +424,13 @@ public class PVPPlayer
 	
 	public void setMaxHealth(double maxHealth)
 	{
-		if(maxHealth == this.maxHealth)
-			return;
 		if(this.health == this.maxHealth && this.combatCoolDown < 1)
 		{
 			this.maxHealth = maxHealth;
 			this.sethealth(this.maxHealth);
 			if(this.armorEventLastTick == 1)
 			{
-				player.sendMessage(ChatColor.GREEN + "[HEALTH]:" + ChatColor.YELLOW + " change in armor your new health is: " + ChatColor.GREEN + this.maxHealth);
+				player.sendMessage(ChatColor.GREEN + "[POWERLEVEL]:" + ChatColor.YELLOW + " change in armor your new Health is: " + ChatColor.GREEN + this.maxHealth);
 			}
 		}
 		else
@@ -197,8 +438,8 @@ public class PVPPlayer
 			this.maxHealth = maxHealth;
 			if(this.armorEventLastTick == 1)
 			{
-				player.sendMessage(ChatColor.GREEN + "[HEALTH]:" + ChatColor.YELLOW + " change in armor your new health is: " + ChatColor.GREEN + this.maxHealth);
-				player.sendMessage(ChatColor.GREEN + "[HEALTH]:" + ChatColor.RED + "Due to recent combat you will gain life to your new max");
+				player.sendMessage(ChatColor.GREEN + "[POWERLEVEL]:" + ChatColor.YELLOW + " change in armor your new Health is: " + ChatColor.GREEN + this.maxHealth);
+				player.sendMessage(ChatColor.GREEN + "[POWERLEVEL]:" + ChatColor.RED + "Due to recent combat you will gain life to your new max");
 			}
 
 		}
@@ -265,6 +506,18 @@ public class PVPPlayer
 	
 	public boolean damage(int dealtDamage)
 	{
+		for(PotionEffect effect:this.getPlayer().getActivePotionEffects())
+		{
+			if(effect.getType() == PotionEffectType.DAMAGE_RESISTANCE)
+			{
+				int level = effect.getAmplifier();
+				dealtDamage = dealtDamage - level * 12;
+				if(dealtDamage < 0)
+				{
+					dealtDamage = 0;
+				}
+			}
+		}
 		if(this.player.getNoDamageTicks() <= 0)
 		{
 			this.lastDamage = dealtDamage;
@@ -302,7 +555,169 @@ public class PVPPlayer
 	}
 	
 	public void tick()
-	{
+	{	
+		if(this.canRegen == true && player.isSneaking() == true && this.superRegenCountdown > 0 && this.player.isFlying() == false){
+			this.superRegenCountdown--;
+			this.player.sendMessage(ChatColor.GREEN + "Begining Super Recharge Countdown! : " + this.superRegenCountdown);
+		}
+		if(this.superRegenCountdown <= 0){
+			if(!PvpBalance.superCharge.contains(this.player))
+			{
+				PvpBalance.superCharge.add(this.player);
+			}
+			this.setStamina((int) (this.getStamina() + 100));
+			this.sethealth(this.gethealth() + 200);
+			Effects.superRegen(this.getPlayer());
+		}
+		//SUPER REGEN
+		if(this.player.isSneaking() == false)
+		{
+			this.superRegenCountdown = 6;
+			if(PvpBalance.superCharge.contains(this.player))
+			{
+				PvpBalance.superCharge.remove(this.player);
+			}
+		}
+		if(this.superhitCooldown > 0){
+			this.superhitCooldown--;
+			this.canSuperhit = false;
+			
+		}
+		if(this.superhitCooldown == 0){
+			this.canSuperhit = true;
+		}
+		if(this.superhitCooldown < 0){
+			this.superhitCooldown = 0;
+		}
+		if(this.interceptCooldown > 0){
+			this.interceptCooldown--;
+			this.canIntercept = false;
+		}
+		if(this.interceptCooldown == 0){
+			this.canIntercept = true;
+		}
+		if(this.interceptCooldown < 0){
+			this.interceptCooldown = 0;
+		}
+		Util.MenuHandler.setMainMenu(this.getPlayer());
+		this.getPlayer().setFoodLevel(20);
+		if(this.isDoubleJumping > 0){
+			this.isDoubleJumping--;
+		}
+		if(this.isDoubleJumping < 0){
+			this.isDoubleJumping = 0;
+		}
+		if(this.kamehaCooldown > 0)
+		{
+			this.setCanKameha(false);
+			this.setKamehaCooldown(this.kamehaCooldown -1);
+		}
+		if(this.kamehaCooldown == 0 && this.canKameha == false)
+		{
+			this.setCanKameha(true);
+		}
+		if(this.player.isFlying() == true && this.getUsedSpeedSkill()== true)
+		{
+			Skills.SuperSpeed.speedOff(this.player);
+		}
+		if(this.superMode==true)
+		{
+			this.player.setAllowFlight(true);
+			this.setStamina((int)this.getStamina() - 20);
+			if(this.stamina < 20){
+				PvpBalance.superSaiens.remove(this.player);
+				this.setSuperMode(false);
+			}
+		}
+		
+		if(this.superHitTimer > 0){
+			superHitTimer--;
+		}
+		if(this.superHitTimer < 1){
+			this.setWasSuperHit(false);
+		}
+		//USING SKILL SECTIONS START=============================================
+		if(this.wasSuperHit == true && Util.Utils.clear(player)== false){
+			if(this.superHitTimer > 2){
+				TNTPrimed primed = player.getLocation().getWorld().spawn(player.getLocation().add(0, 0, 0), TNTPrimed.class);
+				primed.setYield(5.5f);
+	        	primed.setFuseTicks(0);
+	        	this.setWasSuperHit(false);
+	        	Effects.impactEffect(primed.getLocation());
+	        	TNTPrimed primed2 = player.getLocation().getWorld().spawn(player.getLocation().add(0, 0, 0), TNTPrimed.class);
+	        	primed2.setYield(2.5f);
+	        	primed2.setFuseTicks(1);
+	        	primed2.setFallDistance(0f);
+			}
+			else if(this.superHitTimer > 0){
+				TNTPrimed primed = player.getLocation().getWorld().spawn(player.getLocation().add(0, 0, 0), TNTPrimed.class);
+				primed.setYield(3);
+	        	primed.setFuseTicks(0);
+	        	this.setWasSuperHit(false);
+	        	Effects.impactEffect(primed.getLocation());
+	        	TNTPrimed primed2 = player.getLocation().getWorld().spawn(player.getLocation().add(0, 0, 0), TNTPrimed.class);
+	        	primed2.setYield(2.5f);
+	        	primed2.setFuseTicks(1);
+	        	primed2.setFallDistance(0f);
+			}
+		}
+		//USING SKILL SECTION END================================================
+		if(this.tackleTimer > 0)
+		{
+			this.tackleTimer--;
+			if(this.getPlayer().getPassenger() != null && this.getPlayer().getPassenger() instanceof Player)
+			{
+				player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 100, 3));	
+				player.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 60, 3));
+				if(this.tackleTimer == 0){
+					this.getPlayer().getPassenger().eject();
+				}
+			}
+			else
+			{
+				this.setTackleTimer(0);
+			}
+		}
+		if(this.getComboReady() == 0 && this.canUsePileDrive() == true || this.getComboReady() == 0 && this.canUseGrappleShot == true)
+		{
+			if(this.canUseGrappleShot==true)
+			{
+				player.sendMessage(ChatColor.RED + "" + ChatColor.BOLD + "YOU NO LONGER FEEL READY TO GRAPPLE-SHOT!");
+				this.setCanUseGrappleShot(false);
+				this.setCanUsePileDrive(false);
+			}
+			if(this.canUsePileDrive==true)
+			{
+				this.setCanUsePileDrive(false);
+				this.setCanUseGrappleShot(false);
+				player.sendMessage(ChatColor.RED + "" + ChatColor.BOLD + "YOU NO LONGER FEEL READY TO PILEDRIVE!");
+			}
+			
+			
+		}
+		if(this.getComboReady() > 0 && this.comboReady < 9){
+			this.comboReady--;
+			if(this.getComboReady() >= 6){
+				this.setCanUsePileDrive(true);
+			}
+		}
+		this.checkForGrapple();
+		if(this.getComboReady() >= 10 && this.comboReady < 99)
+		{
+			this.setComboReady(this.getComboReady() - 10);
+		}
+		if(this.getComboReady() >= 100 && this.comboReady < 999)
+		{
+			this.setComboReady(this.getComboReady()- 100);
+		}
+		this.healthPercent = this.health / this.maxHealth;
+		if(player.getPlayer().getAllowFlight() == false && player.getWorld().getName().contains("world") && this.skillCoolDown == 0){
+			player.setAllowFlight(true);
+		}
+		if(player.isFlying() == true && player.getGameMode() == GameMode.SURVIVAL && this.getSuperMode() == false){
+			player.setAllowFlight(false);
+			player.setFlying(false);
+		}
 		if(this.player.getFoodLevel() < 1 && this.health > 100)
 		{
 			this.sethealth(health - 10);
@@ -335,12 +750,55 @@ public class PVPPlayer
 		{
 			this.hitCoolDown = 0;
 		}
+		if(this.skillCoolDown > 0)
+		{
+			--this.skillCoolDown;
+			if(this.canUseSkill == true){
+				this.setCanUseSkill(false);
+			}
+		}
+		else if(this.skillCoolDown == 0){
+			if(this.canUseSkill == false)
+			{
+				this.setCanUseSkill(true);
+			}
+		}
+		else if(this.skillCoolDown < 0)
+		{
+			this.skillCoolDown = 0;
+		}
+		if(this.wasSprinting > 0)
+		{
+			--this.wasSprinting;
+		}
+		else if(this.wasSprinting < 0)
+		{
+			this.wasSprinting = 0;
+		}
+		if(player.isSprinting() == true){
+			this.wasSprinting = 2;
+		}
+		if(this.usedSpeedSkill == true){
+			this.setStamina((int)stamina - 50);
+			if(this.stamina <= 4)
+			{
+				player.sendMessage(ChatColor.RED + "" + ChatColor.RED + "YOUR OUT OF STAMINA AND STOP SPRINTING!");
+				SuperSpeed.speedOff(player);
+			}
+		}
 		String message = ("SIDEBAR,Health," + ChatColor.BLUE + "Health:" + ChatColor.RESET + "," + (int)this.health);
 		Bukkit.getMessenger().dispatchIncomingMessage(player, "Scoreboard", message.getBytes());
-		String message2 = ("SIDEBAR,Health," + ChatColor.GREEN + "Till Regen:" + ChatColor.RESET + "," + ((int)this.combatCoolDown));
+		String message2 = ("SIDEBAR,Health," + ChatColor.YELLOW + "Powerlevel:" + ChatColor.RESET + "," + (int)this.stamina);
 		Bukkit.getMessenger().dispatchIncomingMessage(player, "Scoreboard", message2.getBytes());
+		String message3 = ("SIDEBAR,Health," + ChatColor.GREEN + "Regen CD:" + ChatColor.RESET + "," + ((int)this.combatCoolDown));
+		Bukkit.getMessenger().dispatchIncomingMessage(player, "Scoreboard", message3.getBytes());
+		String message4 = ("SIDEBAR,Health," + ChatColor.RED + "Skill CD:" + ChatColor.RESET + "," + ((int)this.skillCoolDown));
+		Bukkit.getMessenger().dispatchIncomingMessage(player, "Scoreboard", message4.getBytes());
+		String message5 = ("SIDEBAR,Health," + ChatColor.RED + "Kameha CD:" + ChatColor.RESET + "," + ((int)this.getKamehaCooldown()));
+		Bukkit.getMessenger().dispatchIncomingMessage(player, "Scoreboard", message5.getBytes());
 		if(player.getGameMode() == GameMode.CREATIVE)
 		{
+			this.stamina = this.maxStamina;
 			this.health = this.maxHealth;
 			this.canRegen = true;
 			this.healthLastTick = this.maxHealth;
@@ -351,11 +809,6 @@ public class PVPPlayer
 			this.combatCoolDown = 0;
 			this.armorEventLastTick = 0;
 			return;
-		}
-		if(this.armorEventLastTick > 0)
-		{
-			this.armorEventLastTick = 0;
-			Damage.calcArmor(player);
 		}
 		if(player.getHealth() <= 0)
 		{
@@ -378,7 +831,7 @@ public class PVPPlayer
 		{
 			this.canRegen = false;
 		}
-		else
+		else 
 		{
 			canRegen = true;
 		}
@@ -413,6 +866,9 @@ public class PVPPlayer
 				this.sethealth(health + heal);
 			}
 		}
+		if(this.getStamina() < this.getMaxStamina()){
+			this.setStamina((int)this.getStamina() + 1);
+		}
 		if(health > maxHealth)
 		{
 			health = maxHealth;
@@ -420,6 +876,9 @@ public class PVPPlayer
 		healthLastTick = health;
 	}
 	
+	public void setCanKameha(boolean canKameha) {
+		this.canKameha = canKameha;
+	}
 	public void setProperHealth()
 	{
 		if(this.isDead == false)
@@ -635,5 +1094,66 @@ public class PVPPlayer
 	public boolean usesPartyChat()
 	{
 		return this.partyChat;
+	}
+	public boolean canUsePileDrive() 
+	{
+		return canUsePileDrive;
+	}
+	public void setCanUsePileDrive(boolean canUsePileDrive)
+	{
+		this.canUsePileDrive = canUsePileDrive;
+	}
+	public void checkForGrapple()
+	{
+		if(this.isUsingGrappleShot == true)
+		{
+			if(this.getGrappleStart() != null && this.getGrappleEnd() != null && this.hitByGrapple == null)
+			{
+				Skills.GrappleShot.grappleShotBlockHit(getPlayer(), this.getGrappleEnd().getBlock(), this);
+				this.setCanUsePileDrive(false);
+			}
+			if(this.getGrappleStart() != null && this.hitByGrapple != null)
+			{
+				Skills.GrappleShot.grappleShotPlayerHit(this.hitByGrapple, this.getPlayer(), this);
+				this.setCanUsePileDrive(false);
+			}
+		}
+	}
+	public boolean getSuperMode() {
+		return this.superMode;
+	}
+	public void setSuperMode(boolean superMode) {
+		this.superMode = superMode;
+		if(superMode == false){
+			if(PvpBalance.superSaiens.contains(this.getPlayer())){
+				PvpBalance.superSaiens.remove(this.getPlayer());
+			}
+			
+		}
+	}
+	public void setKamehaCooldown(int i) {
+		this.kamehaCooldown = i;
+	}
+	public boolean canKameha()
+	{
+		return this.canKameha;
+	}
+	public void setCanIntercept(boolean canIntercept) {
+		this.canIntercept = canIntercept;
+	}
+	public void setInterceptCooldown(int interceptCooldown) {
+		this.interceptCooldown = interceptCooldown;
+	}
+	public boolean canIntercept() {
+		return this.canIntercept;
+	}
+	public boolean canSuperhit() {
+		return this.canSuperhit;
+	}
+	public void setSuperhitCooldown(int i) {
+		this.superhitCooldown = i;		
+	}
+	public void setCanSuperhit(boolean b) {
+		this.canSuperhit = b;
 	}
 }
