@@ -98,7 +98,6 @@ public class DBZListener implements Listener
 				{
 					Location loc = event.getEntity().getLocation();
 					ball.setYield(2);
-					ball.remove();
 					TNTPrimed primed = loc.getWorld().spawn(loc, TNTPrimed.class);
 					primed.setYield(4);
 		        	primed.setFuseTicks(0);
@@ -108,6 +107,7 @@ public class DBZListener implements Listener
 		        	primed2.setFuseTicks(1);
 		        	primed2.setFallDistance(0f);
 					PvpHandler.kameya.remove(ball);
+					ball.remove();
 				}
 			}
 		}
@@ -422,8 +422,9 @@ public class DBZListener implements Listener
 		}
 		PvpHandler.addPvpPlayer(newPVP);
 		Damage.calcArmor(event.getPlayer());
-		if(player.getHealth() > 0)
+		if(player.getHealth() > 0){
 			newPVP.sethealth(newPVP.getMaxHealth());
+		}
 	}
 	
 	@EventHandler

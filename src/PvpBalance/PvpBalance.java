@@ -151,7 +151,7 @@ public class PvpBalance extends JavaPlugin
 					    			pvp.sethealth(pvp.gethealth() + SaveLoad.LoadSave.Regen);
 					    		}
 					    		//LOW HEALTH
-					    		if(all.getHealth() < 9)
+					    		if(all.getHealth() < 9f)
 					    		{
 					    			Effects.bleed(all);
 					    		}
@@ -250,7 +250,18 @@ public class PvpBalance extends JavaPlugin
 		    //CLEANUP
 		    else if(everyOther == 2)
 		    {
-		    	everyOther = 3;	
+		    	everyOther = 3;
+		    	//CLEANUP FIREBALLS
+		    	for(int fireball = 0; fireball <= PvpHandler.kameya.size(); fireball++)
+		    	{
+		    		Fireball ball = PvpHandler.kameya.get(fireball).getFireball();
+		    		if(ball == null || ball.isValid() == false || ball.getTicksLived() > 300)
+		    		{
+		    			PvpHandler.kameya.remove(ball);
+		    			ball.remove();
+		    			continue;
+		    		}
+		    	}
 		    	applySuperEffects();
 		    	applyChargeEffects();
 		    	applyBallEffects();
@@ -413,7 +424,7 @@ public class PvpBalance extends JavaPlugin
  	}
 	
 	protected void applyChargeEffects() {
-		for(Player player:this.superCharge)
+		for(Player player:PvpBalance.superCharge)
 		{
 			Effects.superRegen(player);
 		}
@@ -426,19 +437,12 @@ public class PvpBalance extends JavaPlugin
 			for(Entity e:ball.getFireball().getNearbyEntities(3, 3, 3))
 	    	{
 				if(e instanceof Player){
-					Player player = (Player)e;
 					if(e != ball.getShooter()){
 						Fireball shoot = ball.getFireball();
 						shoot.teleport(e.getLocation());
 					}
 				}
 	    	}
-    		if(ball.getFireball() == null || ball.getFireball().isValid() == false || ball.getFireball().getTicksLived() > 300)
-    		{
-    			ball.getFireball().remove();
-    			PvpHandler.kameya.remove(ball);
-    			continue;
-    		}
     		Effects.kameya(ball.getFireball());
     	}
 		
@@ -490,9 +494,10 @@ public class PvpBalance extends JavaPlugin
 		}
 	}
 	public static void tackled()
-	{	
-		for(Player player:tackled)
+	{
+		for(int tackledPlayer = 0; tackledPlayer < tackled.size(); tackledPlayer++)
 		{
+			Player player = tackled.get(tackledPlayer);
 			if(player.getLocation().subtract(0, 2, 0).getBlock().getType() != Material.AIR)
 			{
 	        	TNTPrimed primed = player.getLocation().getWorld().spawn(player.getLocation().add(0, 0, 0), TNTPrimed.class);
