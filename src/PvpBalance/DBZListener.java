@@ -104,7 +104,7 @@ public class DBZListener implements Listener
 		        	Effects.impactEffect(primed.getLocation());
 		        	TNTPrimed primed2 = loc.getWorld().spawn(loc, TNTPrimed.class);
 		        	primed2.setYield(6.5f);
-		        	primed2.setFuseTicks(1);
+		        	primed2.setFuseTicks(3);
 		        	primed2.setFallDistance(0f);
 					PvpHandler.kameya.remove(ball);
 					ball.remove();

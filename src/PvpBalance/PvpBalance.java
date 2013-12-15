@@ -252,14 +252,16 @@ public class PvpBalance extends JavaPlugin
 		    {
 		    	everyOther = 3;
 		    	//CLEANUP FIREBALLS
-		    	for(int fireball = 0; fireball <= PvpHandler.kameya.size(); fireball++)
+		    	for(int fireball = 0; fireball < PvpHandler.kameya.size(); fireball++)
 		    	{
-		    		Fireball ball = PvpHandler.kameya.get(fireball).getFireball();
-		    		if(ball == null || ball.isValid() == false || ball.getTicksLived() > 300)
-		    		{
-		    			PvpHandler.kameya.remove(ball);
-		    			ball.remove();
-		    			continue;
+		    		if(PvpHandler.kameya.size() > 0){
+			    		Fireball ball = PvpHandler.kameya.get(fireball).getFireball();
+			    		if(ball == null || ball.isValid() == false || ball.getTicksLived() > 300)
+			    		{
+			    			PvpHandler.kameya.remove(ball);
+			    			ball.remove();
+			    			continue;
+			    		}
 		    		}
 		    	}
 		    	applySuperEffects();
